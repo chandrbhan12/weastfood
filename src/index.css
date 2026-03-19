@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Outfit:wght@100..900&display=swap');
+
+@layer base {
+  :root {
+    --background: 230 25% 7%;
+    --foreground: 210 40% 96%;
+
+    --card: 230 25% 11%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 230 25% 11%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 174 72% 50%;
+    --primary-foreground: 230 25% 7%;
+
+    --secondary: 25 95% 60%;
+    --secondary-foreground: 230 25% 7%;
+
+    --muted: 230 20% 18%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: 270 60% 60%;
+    --accent-foreground: 210 40% 96%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 230 20% 16%;
+    --input: 230 20% 16%;
+    --ring: 174 72% 50%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 230 25% 9%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 174 72% 50%;
+    --sidebar-primary-foreground: 230 25% 7%;
+    --sidebar-accent: 230 20% 15%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 230 20% 14%;
+    --sidebar-ring: 174 72% 50%;
+
+    /* Custom tokens */
+    --success: 145 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 42 90% 55%;
+    --warning-foreground: 230 25% 7%;
+    --hero-gradient: linear-gradient(135deg, hsl(174 72% 50%), hsl(270 60% 60%));
+    --card-hover-shadow: 0 8px 40px -8px hsl(174 72% 50% / 0.25);
+    --section-gradient: linear-gradient(180deg, hsl(230 25% 7%), hsl(230 25% 10%));
+    --glow-primary: 0 0 30px hsl(174 72% 50% / 0.3);
+    --glow-accent: 0 0 30px hsl(270 60% 60% / 0.3);
+    --glass-bg: hsl(230 25% 11% / 0.6);
+    --glass-border: hsl(210 40% 96% / 0.08);
+
+    /* Typography */
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Outfit', sans-serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .text-gradient-primary {
+    background: var(--hero-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-section-gradient {
+    background: var(--section-gradient);
+  }
+
+  .card-hover-shadow {
+    box-shadow: var(--card-hover-shadow);
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+
+  .glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 4s ease infinite;
+  }
+
+  .noise-bg {
+    position: relative;
+  }
+  .noise-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
