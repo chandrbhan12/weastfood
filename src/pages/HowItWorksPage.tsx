@@ -34,17 +34,6 @@ const HowItWorksPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground">
-            How FoodLink Works
-          </h1>
-          <p className="mx-auto mt-3 sm:mt-4 max-w-xl text-sm sm:text-base text-muted-foreground">
-            Whether you're a restaurant with leftover food or a volunteer wanting to help — here's how you can make a difference.
-          </p>
-        </motion.div>
-      </div>
-
       <HowItWorks />
 
       <section className="py-16 sm:py-20 md:py-24 lg:py-28">

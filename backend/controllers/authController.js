@@ -47,6 +47,7 @@ export const register = async (req, res) => {
         full_name: user.full_name,
         phone: user.phone,
         role: user.role,
+        points: user.points || 0,
       },
     });
   } catch (error) {
@@ -90,6 +91,7 @@ export const login = async (req, res) => {
         full_name: user.full_name,
         phone: user.phone,
         role: user.role,
+        points: user.points || 0,
       },
     });
   } catch (error) {
@@ -111,6 +113,7 @@ export const getCurrentUser = async (req, res) => {
         full_name: user.full_name,
         phone: user.phone,
         role: user.role,
+        points: user.points || 0,
       },
     });
   } catch (error) {

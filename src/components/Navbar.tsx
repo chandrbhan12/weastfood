@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, Menu, X, LogOut, User, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,56 +21,15 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [optIn, setOptIn] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('notify_opt_in') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
-  const socketRef = useRef<any>(null);
-  const unreadCount = notifications.length;
 
-  useEffect(() => {
-    // if user opted in, create socket and listen for targeted events
-    if (!user || !optIn) return;
-
-    // dynamically import to avoid loading on server
-    import('socket.io-client').then(({ io }) => {
-      const socket = io(import.meta.env.VITE_API_URL || '/');
-      socketRef.current = socket;
-      socket.on('connect', () => {
-        if (user?.id) socket.emit('identify', user.id);
-      });
-
-      socket.on('pickupAccepted', (data: any) => {
-        setNotifications((prev) => [{ id: data._id || Date.now(), title: 'Pickup Claimed', body: 'Your donation was claimed', data }, ...prev]);
-      });
-      socket.on('pickupStatusUpdated', (data: any) => {
-        setNotifications((prev) => [{ id: data._id || Date.now(), title: 'Pickup Update', body: `Status: ${data.status}`, data }, ...prev]);
-      });
-    });
-
-    return () => {
-      try {
-        socketRef.current?.disconnect();
-        socketRef.current = null;
-      } catch (e) {}
-    };
-  }, [user, optIn]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('notify_opt_in', optIn ? 'true' : 'false');
-    } catch (e) {}
-  }, [optIn]);
 
   const links = [
     { to: "/", label: "Home" },
+    ...(user?.role === 'volunteer' || user?.role === 'ngo' ? [{ to: "/dashboard", label: "Dashboard" }] : []),
     { to: "/browse", label: "Browse Food" },
     { to: "/add-food", label: "Donate Food" },
-    { to: "/how-it-works", label: "How It Works" },
-    { to: "/track", label: "Track" },
+    { to: "/track", label: "Track Delivery" },
+    { to: "/#top-donors", label: "Top Donors" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -78,26 +39,93 @@ const Navbar = () => {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    const fetchNotifications = async () => {
+      try {
+        const saved = localStorage.getItem('auth_session');
+        const token = saved ? JSON.parse(saved).token : null;
+        if (!token) return;
+
+        const res = await fetch('/api/notifications', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          
+          // Trigger toast for new unread messages
+          const currentUnreadIds = new Set(notifications.filter((n: any) => !n.isRead).map((n: any) => n._id));
+          const newUnread = data.filter((n: any) => !n.isRead && !currentUnreadIds.has(n._id));
+          
+          if (newUnread.length > 0) {
+            newUnread.forEach((n: any) => {
+              toast(n.title, {
+                description: n.message,
+                icon: <Bell className="h-4 w-4 text-primary" />,
+              });
+            });
+          }
+          
+          setNotifications(data);
+        }
+      } catch (e) {
+        console.error("Failed to load notifications", e);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
+  }, [user, notifications.length]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      const saved = localStorage.getItem('auth_session');
+      const token = saved ? JSON.parse(saved).token : null;
+      if (!token) return;
+
+      const res = await fetch('/api/notifications/all/read', {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        toast.success("All notifications marked as read");
+      }
+    } catch (e) {
+      console.error("Mark all read failed", e);
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border glass">
-      {/* Top gradient line */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+    <nav className="sticky top-0 z-50 border-b border-white/5 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40">
+      {/* Top ambient glow line */}
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
       
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 group">
+      <div className="container mx-auto flex h-20 items-center justify-between px-4 lg:px-8">
+        <Link to="/" className="flex items-center gap-2.5 group">
           <motion.div
-            whileHover={{ rotate: 15, scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md glow-primary"
+            whileHover={{ rotate: 12, scale: 1.15 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-[0_8px_20px_-6px_rgba(20,184,166,0.5)]"
           >
-            <Heart className="h-5 w-5 text-primary-foreground" />
+            <Heart className="h-5 w-5 text-primary-foreground fill-current" />
           </motion.div>
-          <span className="font-display text-xl text-foreground group-hover:text-primary transition-colors">FoodLink</span>
+          <div className="flex flex-col">
+            <span className="font-display text-xl font-black text-foreground tracking-tighter group-hover:text-primary transition-colors">FoodLink</span>
+            <span className="text-[8px] font-bold uppercase tracking-[0.3em] text-muted-foreground/60 leading-none">V2 Premium</span>
+          </div>
         </Link>
 
         {/* Desktop nav */}
@@ -128,31 +156,48 @@ const Navbar = () => {
                 )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 glass">
-              <div className="p-2">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium">Notifications</div>
-                  <div className="text-xs text-muted-foreground">{unreadCount} new</div>
-                </div>
-                <div className="space-y-2 max-h-56 overflow-y-auto">
-                  {notifications.length === 0 && (
-                    <div className="text-xs text-muted-foreground">No notifications</div>
-                  )}
-                  {notifications.map(n => (
-                    <div key={n.id} className="p-2 rounded hover:bg-muted/30 cursor-pointer" onClick={() => { /* no-op for now */ }}>
-                      <div className="text-sm font-medium">{n.title}</div>
-                      <div className="text-xs text-muted-foreground">{n.body}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <input id="notif-opt" type="checkbox" checked={optIn} onChange={() => setOptIn(v => !v)} className="h-4 w-4" />
-                    <label htmlFor="notif-opt" className="text-xs">Enable notifications</label>
-                  </div>
-                  <button className="text-xs text-muted-foreground" onClick={() => setNotifications([])}>Mark all read</button>
+            <DropdownMenuContent align="end" className="w-80 glass border-white/10 shadow-2xl p-0 overflow-hidden">
+              <div className="p-4 border-b border-white/5 bg-white/5">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-bold uppercase tracking-widest text-foreground">Notifications</div>
+                  <Badge className="bg-primary/20 text-primary border-0 font-bold">{unreadCount} new</Badge>
                 </div>
               </div>
+              <div className="max-h-80 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Bell className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">No notifications yet</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-white/5">
+                    {notifications.map(n => (
+                      <div key={n._id || n.id} className={`p-4 hover:bg-white/5 cursor-pointer transition-colors ${!n.isRead ? 'bg-primary/5' : ''}`}>
+                        <div className="flex gap-3">
+                           <div className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${!n.isRead ? 'bg-primary animate-pulse' : 'bg-transparent'}`} />
+                           <div>
+                              <div className="text-sm font-bold text-foreground leading-tight">{n.title}</div>
+                              <div className="text-xs text-muted-foreground mt-1 leading-relaxed">{n.message}</div>
+                              <div className="text-[10px] text-muted-foreground/60 mt-2 font-mono">
+                                {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                           </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {notifications.length > 0 && (
+                <div className="p-3 bg-white/5 border-t border-white/5 flex items-center justify-center">
+                  <button 
+                    className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors" 
+                    onClick={handleMarkAllRead}
+                  >
+                    Mark all current as read
+                  </button>
+                </div>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -273,15 +318,8 @@ const Navbar = () => {
 
                     <div className="rounded-lg glass px-3 py-2.5">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Bell className="h-5 w-5" />
-                          <div className="text-sm font-medium">Notifications</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input id="mobile-notif-opt" type="checkbox" checked={optIn} onChange={() => setOptIn(v => !v)} className="h-4 w-4" />
-                        </div>
+                        <div className="text-sm font-medium">Notifications</div>
                       </div>
-                      <div className="mt-2 text-xs text-muted-foreground">{notifications.length === 0 ? 'No notifications' : `${notifications.length} unread`}</div>
                     </div>
                   </div>
                 ) : (

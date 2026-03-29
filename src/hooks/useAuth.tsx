@@ -16,6 +16,7 @@ interface User {
   phone: string | null;
   role: string;
   avatar_url: string | null;
+  points: number;
 }
 
 interface Session {
@@ -66,7 +67,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      // Remove hardcoded localhost for production Vercel support
+      const baseUrl = import.meta.env.VITE_API_URL || ''; 
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

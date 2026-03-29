@@ -26,12 +26,16 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['restaurant', 'volunteer', 'admin'],
+      enum: ['restaurant', 'volunteer', 'ngo', 'admin'],
       default: 'volunteer',
     },
     avatar_url: {
       type: String,
       default: null,
+    },
+    points: {
+      type: Number,
+      default: 0,
     },
     isActive: {
       type: Boolean,

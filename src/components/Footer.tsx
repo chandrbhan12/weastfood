@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Heart, Github, Twitter } from "lucide-react";
+import { Heart, Github, Twitter, Youtube } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Footer = () => {
@@ -104,7 +104,7 @@ const Footer = () => {
           </p>
           <div className="flex items-center gap-4">
             <motion.a whileHover={{ scale: 1.2, y: -2 }} href="#" className="text-muted-foreground hover:text-primary transition-colors">
-              <Github className="h-4 sm:h-5 w-4 sm:w-5" />
+              <Youtube className="h-4 sm:h-5 w-4 sm:w-5" />
             </motion.a>
             <motion.a whileHover={{ scale: 1.2, y: -2 }} href="#" className="text-muted-foreground hover:text-primary transition-colors">
               <Twitter className="h-4 sm:h-5 w-4 sm:w-5" />

@@ -1,15 +1,16 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from 'react';
-import { io } from 'socket.io-client';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Mail, Phone, Badge, Heart } from "lucide-react";
+import { LogOut, Mail, Phone, Heart, Package } from "lucide-react";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ListingCard from "@/components/ListingCard";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -17,9 +18,44 @@ const Profile = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [items, setItems] = useState('');
   const [locationVal, setLocationVal] = useState('');
-  const socketRef = useRef<any>(null);
-  const { toast } = useToast();
+  
   const navigate = useNavigate();
+
+  const [latestPoints, setLatestPoints] = useState(user?.points || 0);
+
+  useEffect(() => {
+    // fetch my requests and history
+    if (!user) return;
+    (async () => {
+      try {
+        const saved = localStorage.getItem('auth_session');
+        const token = saved ? JSON.parse(saved).token : null;
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/pickups/me', { headers });
+        if (res.ok) {
+          const json = await res.json();
+          setRequests([...(json.asDonor || []), ...(json.asPartner || [])]);
+        }
+
+        const hres = await fetch('/api/pickups/history', { headers });
+        if (hres.ok) {
+          const hj = await hres.json();
+          setHistory(hj || []);
+        }
+
+        // Fetch latest user points
+        const ures = await fetch('/api/auth/me', { headers });
+        if (ures.ok) {
+          const ud = await ures.json();
+          setLatestPoints(ud.points || ud.user?.points || 0);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -53,72 +89,21 @@ const Profile = () => {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
-  useEffect(() => {
-    // connect socket
-    try {
-      const socket = io(import.meta.env.VITE_API_URL || '/');
-      socketRef.current = socket;
-      socket.on('connect', () => {
-        console.log('connected to socket', socket.id);
-      });
-      
-      // identify will be sent from a separate effect when `user` becomes available
-      socket.on('pickupCreated', (data: any) => {
-        setRequests(prev => [data, ...prev]);
-      });
-      socket.on('pickupAccepted', (data: any) => {
-        setRequests(prev => prev.map(r => (r._id === data._id ? data : r)));
-        toast({ title: 'Pickup Claimed', description: 'Your donation was claimed — thank you!' });
-      });
-      socket.on('pickupAcceptedByPartner', (data: any) => {
-        setRequests(prev => prev.map(r => (r._id === data._id ? data : r)));
-      });
-      socket.on('pickupStatusUpdated', (data: any) => {
-        setRequests(prev => prev.map(r => (r._id === data._id ? data : r)));
-        toast({ title: 'Pickup Update', description: `Status changed to ${data.status}` });
-      });
-    } catch (err) {
-      console.warn('Socket init failed', err);
-    }
 
-    // fetch my requests and history
-    (async () => {
-      try {
-        const res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/pickups/me', { credentials: 'include' });
-        const json = await res.json();
-        setRequests([...(json.asDonor || []), ...(json.asPartner || [])]);
 
-        const hres = await fetch((import.meta.env.VITE_API_URL || '/api') + '/pickups/history', { credentials: 'include' });
-        const hj = await hres.json();
-        setHistory(hj || []);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-
-    return () => {
-      if (socketRef.current) socketRef.current.disconnect();
-    };
-  }, []);
-
-  // send identify when user becomes available
-  useEffect(() => {
-    if (socketRef.current && user?.id) {
-      try {
-        socketRef.current.emit('identify', user.id);
-      } catch (e) {
-        console.warn('identify emit failed', e);
-      }
-    }
-  }, [user]);
+  // No socket usage: identification/emits are disabled
 
   const submitRequest = async () => {
     if (!items) return;
     try {
-      const res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/pickups', {
+      const saved = localStorage.getItem('auth_session');
+      const token = saved ? JSON.parse(saved).token : null;
+      const res = await fetch('/api/pickups', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ items, location: locationVal }),
       });
       const json = await res.json();
@@ -132,7 +117,12 @@ const Profile = () => {
 
   const handleAccept = async (id: string) => {
     try {
-      const res = await fetch((import.meta.env.VITE_API_URL || '/api') + `/pickups/${id}/accept`, { method: 'POST', credentials: 'include' });
+      const saved = localStorage.getItem('auth_session');
+      const token = saved ? JSON.parse(saved).token : null;
+      const res = await fetch(`/api/pickups/${id}/accept`, { 
+        method: 'POST', 
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const json = await res.json();
       setRequests(prev => prev.map(r => (r._id === json._id ? json : r)));
     } catch (e) { console.error(e); }
@@ -140,10 +130,60 @@ const Profile = () => {
 
   const handleReject = async (id: string) => {
     try {
-      const res = await fetch((import.meta.env.VITE_API_URL || '/api') + `/pickups/${id}/reject`, { method: 'POST', credentials: 'include' });
+      const saved = localStorage.getItem('auth_session');
+      const token = saved ? JSON.parse(saved).token : null;
+      const res = await fetch(`/api/pickups/${id}/reject`, { 
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const json = await res.json();
       setRequests(prev => prev.map(r => (r._id === json._id ? json : r)));
     } catch (e) { console.error(e); }
+  };
+
+  const markCompleted = async (id: string) => {
+    try {
+      const saved = localStorage.getItem('auth_session');
+      const token = saved ? JSON.parse(saved).token : null;
+      if (!token) return toast.error('You must be logged in to update status.');
+      const res = await fetch(`/api/pickups/${id}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ status: 'completed' }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      const updated = await res.json();
+      setRequests(prev => prev.map(p => (p._id === id ? updated : p)));
+      toast.success('Marked donation as completed.');
+    } catch (e) {
+      console.error('Status update failed', e);
+      toast.error('Could not update donation status.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this donation?')) return;
+    try {
+      const saved = localStorage.getItem('auth_session');
+      const token = saved ? JSON.parse(saved).token : null;
+      if (!token) return toast.error('Please login.');
+      
+      const res = await fetch(`/api/pickups/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        setRequests(prev => prev.filter(r => r._id !== id));
+        toast.success('Donation deleted successfully');
+      } else {
+        const err = await res.json();
+        toast.error(err.message || 'Failed to delete');
+      }
+    } catch (e) {
+      console.error('Delete failed', e);
+      toast.error('Could not delete donation.');
+    }
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -152,6 +192,8 @@ const Profile = () => {
         return 'bg-orange-500/20 text-orange-600 border-orange-500/30';
       case 'volunteer':
         return 'bg-blue-500/20 text-blue-600 border-blue-500/30';
+      case 'ngo':
+        return 'bg-purple-500/20 text-purple-600 border-purple-500/30';
       case 'admin':
         return 'bg-red-500/20 text-red-600 border-red-500/30';
       default:
@@ -164,7 +206,9 @@ const Profile = () => {
       case 'restaurant':
         return '🧑‍🍳 Restaurant / Food Donor';
       case 'volunteer':
-        return '🤝 Volunteer / NGO';
+        return '🤝 Volunteer';
+      case 'ngo':
+        return '🏢 NGO / Organization';
       case 'admin':
         return '👨‍💼 Administrator';
       default:
@@ -247,19 +291,35 @@ const Profile = () => {
                 </div>
               </div>
 
+              {/* Points Display - Only for Restaurant Donors */}
+              {user.role === 'restaurant' && (
+                <div className="flex justify-center pt-4">
+                   <motion.div 
+                      whileHover={{ scale: 1.05 }}
+                      className="flex items-center gap-4 bg-background/50 border border-primary/20 rounded-full px-6 py-2 shadow-lg backdrop-blur-md"
+                   >
+                      <div className="relative">
+                         <img src="/xp_icon.svg" alt="XP" className="h-10 w-10 sm:h-12 sm:w-12 drop-shadow-md" />
+                      </div>
+                      <div className="flex flex-col">
+                         <span className="text-3xl sm:text-4xl font-bold text-foreground leading-none">
+                            {latestPoints}
+                         </span>
+                         <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Total Points</span>
+                      </div>
+                   </motion.div>
+                </div>
+              )}
+
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 pt-3 sm:pt-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-4">
                 <div className="text-center p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-2xl font-bold text-primary">0</p>
+                  <p className="text-2xl font-bold text-primary">{history.length}</p>
                   <p className="text-sm text-muted-foreground mt-1">Donations</p>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-2xl font-bold text-primary">0</p>
-                  <p className="text-sm text-muted-foreground mt-1">Recipients</p>
-                </div>
-                <div className="text-center p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-2xl font-bold text-primary">0</p>
-                  <p className="text-sm text-muted-foreground mt-1">Impact</p>
+                  <p className="text-2xl font-bold text-primary">{requests.filter(r => r.pickupPartner).length}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Pickups</p>
                 </div>
               </div>
 
@@ -292,67 +352,102 @@ const Profile = () => {
           transition={{ duration: 0.45 }}
           className="mx-auto w-full max-w-2xl"
         >
-          <Card className="glass border-primary/10 shadow-lg">
-            <CardHeader>
-              <CardTitle>Pickup Requests & History</CardTitle>
-              <CardDescription>Request pickups, view status, and manage incoming requests</CardDescription>
+          <Card className="glass border-primary/10 shadow-xl overflow-hidden">
+            <CardHeader className="bg-white/10 border-b border-white/5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl">Your Active Tasks</CardTitle>
+                  <CardDescription>Track and manage your ongoing donations and pickups</CardDescription>
+                </div>
+                <Badge className="bg-primary/20 text-primary border-0 font-bold">
+                  {requests.length} Active
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6 space-y-8">
+              {/* Request Form for Donors */}
               {user.role === 'restaurant' && (
-                <div className="space-y-3 mb-4">
-                  <p className="text-sm text-muted-foreground">Create a pickup request for NGOs / pickup partners</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <input value={items} onChange={e => setItems(e.target.value)} placeholder="Items description" className="col-span-2 p-2 rounded border" />
-                    <input value={locationVal} onChange={e => setLocationVal(e.target.value)} placeholder="Pickup location" className="p-2 rounded border" />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={submitRequest} className="glow-primary">Request Pickup</Button>
+                <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-primary/20 transition-colors" />
+                  <div className="relative z-10">
+                    <h3 className="font-bold text-sm uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                       <Package className="h-4 w-4" /> Post New Food
+                    </h3>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input 
+                        value={items} 
+                        onChange={e => setItems(e.target.value)} 
+                        placeholder="What food are you donating?" 
+                        className="flex-1 bg-black/20 border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground/40 text-white transition-all font-medium" 
+                      />
+                      <input 
+                        value={locationVal} 
+                        onChange={e => setLocationVal(e.target.value)} 
+                        placeholder="Pickup location" 
+                        className="sm:w-1/3 bg-black/20 border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-muted-foreground/40 text-white transition-all font-medium" 
+                      />
+                      <Button onClick={submitRequest} className="glow-primary px-6 h-12 rounded-xl text-xs font-bold uppercase tracking-widest">
+                        Submit
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {user.role === 'volunteer' && (
-                <div className="space-y-3 mb-4">
-                  <p className="text-sm text-muted-foreground">Incoming pickup requests</p>
-                  <div className="space-y-2">
-                    {requests.filter(r => r.status === 'requested').map(r => (
-                      <div key={r._id} className="p-3 rounded bg-muted/40 border flex items-start justify-between">
-                        <div>
-                          <div className="font-medium">{r.items}</div>
-                          <div className="text-sm text-muted-foreground">{r.location}</div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button onClick={() => handleAccept(r._id)} size="sm">Accept</Button>
-                          <Button variant="outline" onClick={() => handleReject(r._id)} size="sm">Reject</Button>
-                        </div>
-                      </div>
+              {/* Grid of Active Task Cards */}
+              <div className="space-y-4">
+                {requests.length === 0 ? (
+                  <div className="py-12 text-center border-2 border-dashed border-white/20 rounded-3xl">
+                    <Package className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground font-medium italic">No active tasks right now.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    {requests.map((r, i) => (
+                      <ListingCard 
+                        key={r._id || i} 
+                        item={r} 
+                        index={i} 
+                        actionLabel={
+                          user.role === 'restaurant' ? (r.status === 'completed' ? 'Done' : 'Mark Completed') : 
+                          (r.status === 'requested' ? 'Accept Pickup' : 'Done')
+                        }
+                        onAction={() => {
+                          if (user.role === 'restaurant' && r.status !== 'completed') return markCompleted(r._id);
+                          if (user.role !== 'restaurant' && r.status === 'requested') return handleAccept(r._id);
+                        }}
+                        isOwner={r.donor?._id === user?.id || r.donor === user?.id}
+                        onDelete={() => handleDelete(r._id)}
+                        className="bg-black/40 border-white/5 shadow-2xl"
+                      />
                     ))}
                   </div>
-                </div>
-              )}
-
-              <div className="mt-4">
-                <p className="text-sm font-medium mb-2">All my requests</p>
-                <div className="space-y-2">
-                  {requests.map(r => (
-                    <div key={r._id} className="p-3 rounded bg-muted/30 border flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{r.items}</div>
-                        <div className="text-sm text-muted-foreground">Status: {r.status}</div>
-                      </div>
-                      <div className="text-sm text-muted-foreground">{new Date(r.createdAt).toLocaleString?.() || r.createdAt}</div>
-                    </div>
-                  ))}
-                </div>
+                )}
               </div>
 
-              <div className="mt-6">
-                <p className="text-sm font-medium mb-2">Donation history</p>
-                <div className="space-y-2">
+              {/* History Section (Simplified) */}
+              <div className="pt-8 border-t border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                   <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">History Archive</h3>
+                   <span className="text-xs text-muted-foreground/60">{history.length} items logged</span>
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                   {history.map(h => (
-                    <div key={h._id} className="p-2 rounded bg-muted/10 border">
-                      <div className="text-sm font-medium">{h.items}</div>
-                      <div className="text-xs text-muted-foreground">{h.status} • {new Date(h.createdAt).toLocaleString?.()}</div>
+                    <div key={h._id} className="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between group hover:bg-white/10 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                          <Heart className="h-4 w-4 text-emerald-500 fill-current opacity-40" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold">{h.items}</div>
+                          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                            {new Date(h.createdAt).toLocaleDateString()} • {h.status}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] uppercase border-emerald-500/20 text-emerald-500/60 font-black">
+                        COMPLETED
+                      </Badge>
                     </div>
                   ))}
                 </div>

@@ -6,8 +6,7 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import pickupRoutes from './routes/pickupRoutes.js';
-import http from 'http';
-import { Server as IOServer } from 'socket.io';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/pickups', pickupRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/api', (req, res) => {
   res.json({ 
@@ -60,33 +60,10 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Create HTTP server and attach Socket.io
-const server = http.createServer(app);
-const io = new IOServer(server, {
-  cors: {
-    origin: '*',
-  },
-});
-
-app.set('io', io);
-
-io.on('connection', (socket) => {
-  console.log('Socket connected:', socket.id);
-  // client should send an `identify` event with their user id to join a private room
-  socket.on('identify', (userId) => {
-    try {
-      if (!userId) return;
-      socket.join(`user:${userId}`);
-    } catch (e) {
-      console.warn('identify error', e);
-    }
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
+}
 
-  socket.on('disconnect', () => {
-    // disconnected
-  });
-});
-
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default app;

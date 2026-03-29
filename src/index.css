@@ -1,28 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Outfit:wght@100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Outfit:wght@100..900&display=swap');
-
 @layer base {
   :root {
-    --background: 230 25% 7%;
-    --foreground: 210 40% 96%;
+    --background: 30 20% 4%;
+    --foreground: 40 10% 98%;
 
-    --card: 230 25% 11%;
-    --card-foreground: 210 40% 96%;
+    --card: 35 15% 7%;
+    --card-foreground: 40 10% 98%;
 
-    --popover: 230 25% 11%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 35 15% 7%;
+    --popover-foreground: 40 10% 98%;
 
-    --primary: 174 72% 50%;
-    --primary-foreground: 230 25% 7%;
+    --primary: 154 62% 48%; /* More natural green */
+    --primary-foreground: 30 20% 4%;
 
-    --secondary: 25 95% 60%;
-    --secondary-foreground: 230 25% 7%;
+    --secondary: 35 100% 64%; /* Warm amber */
+    --secondary-foreground: 30 20% 4%;
 
-    --muted: 230 20% 18%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 35 12% 14%;
+    --muted-foreground: 40 8% 65%;
 
     --accent: 270 60% 60%;
     --accent-foreground: 210 40% 96%;
@@ -50,13 +50,13 @@
     --success-foreground: 0 0% 100%;
     --warning: 42 90% 55%;
     --warning-foreground: 230 25% 7%;
-    --hero-gradient: linear-gradient(135deg, hsl(174 72% 50%), hsl(270 60% 60%));
-    --card-hover-shadow: 0 8px 40px -8px hsl(174 72% 50% / 0.25);
-    --section-gradient: linear-gradient(180deg, hsl(230 25% 7%), hsl(230 25% 10%));
-    --glow-primary: 0 0 30px hsl(174 72% 50% / 0.3);
-    --glow-accent: 0 0 30px hsl(270 60% 60% / 0.3);
-    --glass-bg: hsl(230 25% 11% / 0.6);
-    --glass-border: hsl(210 40% 96% / 0.08);
+    --hero-gradient: linear-gradient(135deg, hsl(154 62% 48%), hsl(35 100% 64%));
+    --card-hover-shadow: 0 12px 60px -12px hsl(154 62% 48% / 0.2);
+    --section-gradient: linear-gradient(180deg, hsl(30 20% 4%), hsl(35 15% 6%));
+    --glow-primary: 0 0 40px hsl(154 62% 48% / 0.25);
+    --glow-accent: 0 0 40px hsl(35 100% 64% / 0.25);
+    --glass-bg: hsl(35 15% 8% / 0.55);
+    --glass-border: hsl(40 10% 98% / 0.05);
 
     /* Typography */
     --font-display: 'Space Grotesk', sans-serif;
@@ -99,6 +99,13 @@
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
+  }
+
+  .glass-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
   .glow-primary {

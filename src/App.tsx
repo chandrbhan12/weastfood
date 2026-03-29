@@ -12,8 +12,10 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Profile from "./pages/Profile";
 import TrackDonation from "./pages/TrackDonation";
+import NGODashboard from "./pages/NGODashboard";
 import NotFound from "./pages/NotFound";
 import AuthDebug from "@/components/AuthDebug";
+import InitialAuthPrompt from "@/components/InitialAuthPrompt";
 
 const queryClient = new QueryClient();
 
@@ -25,12 +27,15 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           {window.location.search.includes('debugAuth=1') && <AuthDebug />}
+          <InitialAuthPrompt />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/browse" element={<Browse />} />
             <Route path="/add-food" element={<AddFood />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
+            
             <Route path="/track" element={<TrackDonation />} />
+            <Route path="/dashboard" element={<NGODashboard />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />

@@ -29,7 +29,11 @@ const Signup = () => {
     try {
       await signup(email, password, fullName, phone, role);
       toast({ title: "Account Created! 🎉", description: "You are now logged in." });
-      navigate("/");
+      if (role === 'volunteer' || role === 'ngo') {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err: any) {
       toast({ title: "Signup Failed", description: err.message || "Please try again.", variant: "destructive" });
     }
@@ -100,7 +104,8 @@ const Signup = () => {
                     </SelectTrigger>
                     <SelectContent className="glass">
                       <SelectItem value="restaurant">🧑‍🍳 Restaurant / Food Donor</SelectItem>
-                      <SelectItem value="volunteer">🤝 Volunteer / NGO</SelectItem>
+                      <SelectItem value="volunteer">🤝 Volunteer</SelectItem>
+                      <SelectItem value="ngo">🏢 NGO / Organization</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

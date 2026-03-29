@@ -4,98 +4,100 @@ import { UtensilsCrossed, Bell, Truck, HeartHandshake } from "lucide-react";
 const steps = [
   {
     icon: UtensilsCrossed,
-    title: "Restaurant Posts Food",
-    description: "Restaurants list leftover food with quantity, pickup time, and location.",
-    color: "from-primary/20 to-primary/5",
+    title: "Post Surplus Food",
+    description: "Restaurants and businesses list their extra food with details like quantity and location.",
+    color: "bg-primary/10 text-primary",
+    borderColor: "border-primary/20",
   },
   {
     icon: Bell,
-    title: "Volunteers Get Notified",
-    description: "Nearby volunteers and NGOs receive alerts about available food.",
-    color: "from-accent/20 to-accent/5",
+    title: "Instant Notification",
+    description: "Local volunteers and NGO partners receive immediate alerts on their devices.",
+    color: "bg-secondary/10 text-secondary",
+    borderColor: "border-secondary/20",
   },
   {
     icon: Truck,
-    title: "Food is Picked Up",
-    description: "A volunteer accepts the request and picks up the food on time.",
-    color: "from-secondary/20 to-secondary/5",
+    title: "Rapid Pickup",
+    description: "A verified volunteer claims the request and picks up the food within minutes.",
+    color: "bg-accent/10 text-accent",
+    borderColor: "border-accent/20",
   },
   {
     icon: HeartHandshake,
-    title: "Delivered to Those in Need",
-    description: "Fresh food reaches hungry people instead of going to waste.",
-    color: "from-success/20 to-success/5",
+    title: "Direct Delivery",
+    description: "The food is delivered directly to community centers, shelters, or individuals in need.",
+    color: "bg-success/10 text-success",
+    borderColor: "border-success/20",
   },
 ];
 
-const HowItWorks = () => {
+const HowItWorks = ({ showHeader = true }) => {
   return (
-    <section className="py-16 sm:py-20 md:py-24 lg:py-32 relative">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent" />
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-foreground tracking-tight"
-          >
-            How <span className="text-gradient-primary">FoodLink</span> Works
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="mx-auto mt-3 sm:mt-4 max-w-xl text-muted-foreground text-sm sm:text-base md:text-lg"
-          >
-            A simple 4-step process to rescue surplus food and feed communities.
-          </motion.p>
-        </div>
-
-        <div className="mt-12 sm:mt-16 md:mt-20 grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, i) => (
+    <section className="py-24 md:py-32 relative bg-background/50">
+      <div className="container mx-auto px-4">
+        {showHeader && (
+          <div className="text-center mb-20 md:mb-28">
             <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-block px-4 py-1 rounded-full bg-muted text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4"
+            >
+              The Ecosystem
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.15 }}
-              whileHover={{ y: -8 }}
-              className="relative text-center group cursor-default"
+              className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground"
             >
-              {/* Connector line */}
-              {i < steps.length - 1 && (
+              How <span className="text-gradient-primary">FoodLink</span> Works
+            </motion.h2>
+          </div>
+        )}
+
+        <div className="relative max-w-4xl mx-auto">
+          {/* Vertical Connector Line */}
+          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-secondary/50 to-transparent md:-translate-x-1/2" />
+
+          <div className="space-y-20 md:space-y-32">
+            {steps.map((step, i) => {
+              const Icon = step.icon;
+              const isEven = i % 2 === 0;
+              return (
                 <motion.div
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.2 + 0.5, duration: 0.6 }}
-                  className="absolute left-[60%] top-10 hidden h-px w-[80%] bg-gradient-to-r from-primary/30 to-transparent md:block origin-left"
-                />
-              )}
-              
-              <motion.div
-                whileHover={{ rotate: 5, scale: 1.1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className={`relative mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${step.color} border border-primary/10 backdrop-blur-sm`}
-              >
-                <step.icon className="h-8 w-8 text-primary" />
-                <span className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground shadow-lg">
-                  {i + 1}
-                </span>
-                {/* Glow on hover */}
-                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity glow-primary" />
-              </motion.div>
-              
-              <h3 className="mt-6 font-display text-lg text-foreground group-hover:text-primary transition-colors">{step.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {step.description}
-              </p>
-            </motion.div>
-          ))}
+                  key={step.title}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.7, delay: i * 0.1 }}
+                  className={`relative flex items-center gap-8 md:gap-0 ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}
+                >
+                  {/* Icon Circle */}
+                  <div className="absolute left-8 md:left-1/2 h-16 w-16 rounded-full glass flex items-center justify-center z-20 md:-translate-x-1/2 border-2 border-background shadow-xl">
+                    <div className={`h-12 w-12 rounded-full ${step.color} flex items-center justify-center ${step.borderColor} border`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                  </div>
+
+                  {/* Content Box */}
+                  <div className={`flex-1 pl-20 md:pl-0 ${isEven ? 'md:pr-24 text-left md:text-right' : 'md:pl-24 text-left'}`}>
+                    <div className="inline-block px-3 py-1 rounded-lg bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-widest mb-3">
+                      Step {i + 1}
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-display text-foreground mb-4">{step.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed text-sm md:text-base max-w-md ml-auto mr-auto md:ml-0 md:mr-0 inline-block">
+                      {step.description}
+                    </p>
+                  </div>
+
+                  {/* Spacer for symmetrical layout */}
+                  <div className="hidden md:block flex-1" />
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
