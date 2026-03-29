@@ -34,7 +34,7 @@ const Browse = () => {
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
         setFetchStatus('loading');
-        const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api';
+        const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
         let res = await fetch(apiBase + '/pickups', { headers });
         if (!res.ok) {
           // try public endpoint if primary fails for any reason
@@ -79,7 +79,7 @@ const Browse = () => {
         const token = saved ? JSON.parse(saved).token : null;
         if (!token) return setMyDonations([]);
         const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` };
-        const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api';
+        const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
         const res = await fetch(apiBase + '/pickups/me', { headers });
         if (!res.ok) return;
         const json = await res.json();
@@ -149,43 +149,13 @@ const Browse = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this donation?')) return;
-    try {
-      const saved = localStorage.getItem('auth_session');
-      const token = saved ? JSON.parse(saved).token : null;
-      if (!token) return toast.error('You must be logged in to delete.');
-      
-      const res = await fetch(`/api/pickups/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.ok) {
-        setListings(prev => prev.filter(l => l._id !== id));
-        setMyDonations(prev => prev.filter(d => d._id !== id));
-        toast.success('Donation deleted successfully');
-      } else {
-        const err = await res.json();
-        toast.error(err.message || 'Failed to delete donation');
-      }
-    } catch (e) {
-      console.error('Delete failed', e);
-      toast.error('Could not delete donation.');
-    }
-  };
-
   const filtered = listings.filter((item: any) => {
-    // Exclude own donations from the main browse grid as they are already in the "My Donations" section
-    const isOwnDonation = user && (item.donor?._id === user.id || item.donor === user.id);
-    if (isOwnDonation) return false;
-
     const matchesSearch =
       (item.items || '').toLowerCase().includes(search.toLowerCase()) ||
       (item.donor?.full_name || '').toLowerCase().includes(search.toLowerCase());
     const matchesCategory = activeCategory === "All" || (item.type || '').toLowerCase().includes(activeCategory.toLowerCase());
     return matchesSearch && matchesCategory;
-  }); // Filtered out own donations to prevent double cards
+  });
 
   // Sample fallback listings to display when no real listings are available
   const sampleListings = [
@@ -219,59 +189,75 @@ const Browse = () => {
   ];
 
   const itemsToRender = listings.length === 0 ? sampleListings : filtered;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground tracking-tight leading-tight">
-             My <span className="text-gradient-primary font-extrabold italic">Donation</span> Dashboard
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground">
+            Browse Available Food
           </h1>
-          <p className="mt-4 text-sm sm:text-base text-muted-foreground font-medium max-w-xl">
-             Track and manage your active food contributions. Mark items as completed once they have been picked up.
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
+            Find and claim surplus food from restaurants near you.
           </p>
         </motion.div>
 
-        {myDonations.length > 0 && (
-          <div className="mt-12 sm:mt-16 bg-black/5 backdrop-blur-xl rounded-[2.5rem] p-8 sm:p-10 border border-white/10 shadow-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-            
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
-              <div>
-                <h2 className="font-display text-2xl sm:text-3xl text-foreground tracking-tight">
-                  My <span className="text-gradient-primary font-extrabold italic">Donations</span> (To-Do)
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1 text-white/40 italic">Manage and track your active food contributions.</p>
-              </div>
-              <Badge variant="outline" className="w-fit h-fit px-4 py-1.5 rounded-full bg-primary/10 border-primary/20 text-primary font-bold uppercase tracking-widest text-[10px]">
-                {myDonations.length} Active Tasks
+        {/* Search & Filters */}
+        <div className="mt-6 sm:mt-8 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by food or restaurant..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 text-sm"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <Badge
+                key={cat}
+                variant={activeCategory === cat ? "default" : "outline"}
+                className="cursor-pointer text-xs sm:text-sm"
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
               </Badge>
-            </div>
-
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 relative z-10">
-              {myDonations.map((item: any, i: number) => (
-                <ListingCard 
-                  key={item._id || i} 
-                  item={item} 
-                  index={i} 
-                  actionLabel={item.status === 'completed' ? 'Done' : 'Mark Completed'}
-                  onAction={() => markCompleted(item._id)}
-                  isOwner={item.donor?._id === user?.id || item.donor === user?.id}
-                  onDelete={() => handleDelete(item._id)}
-                  className="bg-black/40 border-white/5 hover:bg-black/60 transition-all shadow-2xl"
-                />
+            ))}
+          </div>
+        </div>
+        {myDonations.length > 0 && (
+          <div className="mt-6 sm:mt-8 md:mt-10">
+            <h2 className="font-display text-lg text-foreground">My Donations (To-Do)</h2>
+            <div className="mt-3 space-y-3">
+              {myDonations.map((item: any) => (
+                <div key={item._id} className="flex items-center justify-between p-3 rounded-md border">
+                  <div>
+                    <div className="font-medium">{item.items}</div>
+                    <div className="text-xs text-muted-foreground">{item.location} • {item.servings || 0} servings</div>
+                    <div className="text-xs text-muted-foreground">Status: {item.status}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {item.status !== 'completed' && (
+                      <Button size="sm" onClick={() => markCompleted(item._id)}>Mark Completed</Button>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Removed main listings section as per user request to focus on My Donations (To-Do) */}
-
-        {filtered.length === 0 && myDonations.length === 0 && (
-          <div className="mt-16 text-center">
-            <p className="text-lg text-muted-foreground font-medium italic">No active donations or tasks found.</p>
+        {/* Listings */}
+        <div className="mt-6 sm:mt-8 md:mt-10">
+          <div className="text-sm text-muted-foreground mb-3">Listings: {listings.length} — Filtered: {filtered.length}</div>
+          <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {itemsToRender.map((item: any, i: number) => (
+              <ListingCard key={item._id || i} item={item} index={i} onClaim={handleClaim} />
+            ))}
           </div>
-        )}
+        </div>
 
         {filtered.length === 0 && (
           <div className="mt-16 text-center">

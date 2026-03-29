@@ -46,8 +46,7 @@ const AddFood = () => {
 
       // Build API URL robustly. If VITE_API_URL is provided it can be a full origin
       // Default to local backend on port 5000 when VITE_API_URL is not set
-      // Remove hardcoded localhost for production Vercel support
-      const rawBase = import.meta.env.VITE_API_URL || '';
+      const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const base = rawBase.replace(/\/$/, '');
       // If base already contains '/api' assume it's the API base, otherwise append '/api'
       const apiUrl = base ? (base.includes('/api') ? `${base}/pickups` : `${base}/api/pickups`) : '/api/pickups';
