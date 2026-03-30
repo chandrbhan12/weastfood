@@ -15,7 +15,7 @@ const TopDonors = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/pickups/top-donors');
+        const res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/api/pickups/top-donors');
         if (!res.ok) return;
         const json = await res.json();
         setDonors(json || []);

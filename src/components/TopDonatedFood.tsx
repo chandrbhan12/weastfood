@@ -17,7 +17,7 @@ const TopDonorsModern = () => {
   useEffect(() => {
     const fetchDonors = async () => {
       try {
-        const res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/pickups/top-donors');
+        const res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/api/pickups/top-donors');
         if (!res.ok) throw new Error('Fetch failed');
         const json = await res.json();
         
