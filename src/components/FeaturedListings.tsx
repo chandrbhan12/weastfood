@@ -19,9 +19,9 @@ const FeaturedListings = () => {
         const token = saved ? JSON.parse(saved).token : null;
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        let res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/pickups', { headers });
+        let res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/api/pickups', { headers });
         if (!res.ok && res.status === 401) {
-          res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/pickups/public');
+          res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/api/pickups/public');
         }
         if (!res.ok) return;
         const json = await res.json();
