@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, Package, Search } from "lucide-react";
+import { Clock, MapPin, Package, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -125,6 +125,38 @@ const Browse = () => {
     } catch (error) {
       console.error("Claim error", error);
       toast.error("Failed to claim this food");
+    }
+  };
+
+  const handleReject = async (item: any) => {
+    try {
+      const saved = localStorage.getItem('auth_session');
+      const token = saved ? JSON.parse(saved).token : null;
+      if (!token) return toast.error('Please login to continue');
+
+      const res = await fetch(`/api/pickups/${item._id}/reject`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' 
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to reject food");
+      
+      toast.info(`Listing rejected`);
+      // Refresh listings
+      const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
+      const updatedRes = await fetch(apiBase + '/pickups', { 
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
+      });
+      if (updatedRes.ok) {
+        const json = await updatedRes.json();
+        setListings(json);
+      }
+    } catch (error) {
+      console.error("Reject error", error);
+      toast.error("Failed to reject this food");
     }
   };
 
@@ -254,7 +286,7 @@ const Browse = () => {
           <div className="text-sm text-muted-foreground mb-3">Listings: {listings.length} — Filtered: {filtered.length}</div>
           <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {itemsToRender.map((item: any, i: number) => (
-              <ListingCard key={item._id || i} item={item} index={i} onClaim={handleClaim} />
+              <ListingCard key={item._id || i} item={item} index={i} onClaim={handleClaim} onReject={handleReject} userRole={user?.role} />
             ))}
           </div>
         </div>

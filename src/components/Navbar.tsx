@@ -27,7 +27,7 @@ const Navbar = () => {
     { to: "/", label: "Home" },
     ...(user?.role === 'volunteer' || user?.role === 'ngo' ? [{ to: "/dashboard", label: "Dashboard" }] : []),
     { to: "/browse", label: "Browse Food" },
-    { to: "/add-food", label: "Donate Food" },
+    ...(user?.role !== 'volunteer' && user?.role !== 'ngo' ? [{ to: "/add-food", label: "Donate Food" }] : []),
     { to: "/track", label: "Track Delivery" },
     { to: "/#top-donors", label: "Top Donors" },
   ];

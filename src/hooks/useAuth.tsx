@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      // Remove hardcoded localhost for production Vercel support
+      // Remove hardcoded localhost for production support
       const baseUrl = import.meta.env.VITE_API_URL || ''; 
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
@@ -75,12 +75,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error("Non-JSON response received:", text.slice(0, 200));
+        throw new Error(`Server returned an invalid response (${response.status}). Please check your API URL.`);
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || 'Login failed');
+      }
+
       const newSession: Session = {
         user: data.user,
         token: data.token,
@@ -97,18 +105,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (email: string, password: string, full_name: string, phone: string, role: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, full_name, phone, role }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Signup failed');
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error("Non-JSON response received:", text.slice(0, 200));
+        throw new Error(`Server returned an invalid response (${response.status}). Please check your API URL.`);
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || 'Signup failed');
+      }
+
       const newSession: Session = {
         user: data.user,
         token: data.token,

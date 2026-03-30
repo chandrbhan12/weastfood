@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
@@ -45,11 +46,24 @@ app.get('/api/health', (req, res) => {
 });
 
 // Serve frontend static files
-app.use(express.static(path.join(__dirname, '../dist')));
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+} else {
+  console.warn('Frontend "dist" folder not found. Some routes may not work.');
+}
 
 // Client-side routing fallback - serve index.html for all non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+  const indexPath = path.join(__dirname, '../dist/index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ 
+      message: 'Frontend build not found. Please run "npm run build" in the frontend directory.',
+      error: 'ENOENT: index.html missing' 
+    });
+  }
 });
 
 // Error handling middleware

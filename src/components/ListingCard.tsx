@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, Package } from "lucide-react";
+import { Clock, MapPin, Package, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -9,9 +9,11 @@ type Props = {
   item: any;
   index?: number;
   onClaim?: (item: any) => void;
+  onReject?: (item: any) => void;
+  userRole?: string;
 };
 
-const ListingCard = ({ item, index = 0, onClaim }: Props) => {
+const ListingCard = ({ item, index = 0, onClaim, onReject, userRole }: Props) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -67,15 +69,32 @@ const ListingCard = ({ item, index = 0, onClaim }: Props) => {
         {item.location}
       </div>
 
-      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-        <Button className="mt-6 w-full glow-primary" size="sm" onClick={() => {
-          if (onClaim) return onClaim(item);
-          toast.success('Claim requested — check Profile for updates');
-        }}>
-          <Package className="mr-2 h-4 w-4" />
-          Claim This Food
-        </Button>
-      </motion.div>
+      {userRole === 'volunteer' || userRole === 'ngo' ? (
+        <div className="mt-6 flex gap-3">
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+            <Button className="w-full bg-green-500 hover:bg-green-600 text-white" size="sm" onClick={() => onClaim && onClaim(item)}>
+              <Package className="mr-2 h-4 w-4" />
+              Accept
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+            <Button className="w-full border-red-500/50 text-red-500 hover:bg-red-500/10" variant="outline" size="sm" onClick={() => onReject && onReject(item)}>
+              <X className="mr-2 h-4 w-4" />
+              Reject
+            </Button>
+          </motion.div>
+        </div>
+      ) : (
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button className="mt-6 w-full glow-primary" size="sm" onClick={() => {
+            if (onClaim) return onClaim(item);
+            toast.success('Claim requested — check Profile for updates');
+          }}>
+            <Package className="mr-2 h-4 w-4" />
+            Claim This Food
+          </Button>
+        </motion.div>
+      )}
     </motion.div>
   );
 };

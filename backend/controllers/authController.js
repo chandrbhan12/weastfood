@@ -11,6 +11,7 @@ const generateToken = (id) => {
 // @access  Public
 export const register = async (req, res) => {
   try {
+    console.log('Register request body:', req.body);
     const { email, password, full_name, phone, role } = req.body;
 
     // Validation
@@ -33,10 +34,14 @@ export const register = async (req, res) => {
       role: role || 'volunteer',
     });
 
+    console.log('Saving user to database...');
     await user.save();
+    console.log('User saved successfully');
 
     // Generate token
+    console.log('Generating token...');
     const token = generateToken(user._id);
+    console.log('Token generated');
 
     res.status(201).json({
       success: true,
