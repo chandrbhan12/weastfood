@@ -35,11 +35,11 @@ const Browse = () => {
         if (token) headers['Authorization'] = `Bearer ${token}`;
         setFetchStatus('loading');
         const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
-        let res = await fetch(apiBase + '/pickups', { headers });
+        let res = await fetch(apiBase + '/api/pickups', { headers });
         if (!res.ok) {
           // try public endpoint if primary fails for any reason
           console.warn('Primary /pickups failed, status:', res.status);
-          res = await fetch(apiBase + '/pickups/public');
+          res = await fetch(apiBase + '/api/pickups/public');
           console.warn('Tried /pickups/public, status:', res.status);
         }
         if (!res.ok) {
@@ -80,7 +80,7 @@ const Browse = () => {
         if (!token) return setMyDonations([]);
         const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` };
         const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
-        const res = await fetch(apiBase + '/pickups/me', { headers });
+        const res = await fetch(apiBase + '/api/pickups/me', { headers });
         if (!res.ok) return;
         const json = await res.json();
         if (!mounted) return;
@@ -115,7 +115,7 @@ const Browse = () => {
       toast.success(`Food claimed successfully!`);
       // Refresh listings
       const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
-      const updatedRes = await fetch(apiBase + '/pickups', { 
+      const updatedRes = await fetch(apiBase + '/api/pickups', { 
         headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
       });
       if (updatedRes.ok) {
@@ -147,7 +147,7 @@ const Browse = () => {
       toast.info(`Listing rejected`);
       // Refresh listings
       const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
-      const updatedRes = await fetch(apiBase + '/pickups', { 
+      const updatedRes = await fetch(apiBase + '/api/pickups', { 
         headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
       });
       if (updatedRes.ok) {
@@ -166,7 +166,7 @@ const Browse = () => {
       const token = saved ? JSON.parse(saved).token : null;
       if (!token) return toast.error('You must be logged in to update status.');
       const base = import.meta.env.VITE_API_URL || '/api';
-      const res = await fetch(base + `/pickups/${id}/status`, {
+      const res = await fetch(base + `/api/pickups/${id}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ status: 'completed' }),
