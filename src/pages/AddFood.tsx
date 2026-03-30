@@ -49,7 +49,7 @@ const AddFood = () => {
       const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const base = rawBase.replace(/\/$/, '');
       // If base already contains '/api' assume it's the API base, otherwise append '/api'
-      const apiUrl = base ? (base.includes('/api') ? `${base}/pickups` : `${base}/api/pickups`) : '/api/pickups';
+      const apiUrl = base ? (base.includes('/api') ? `${base}/api/pickups` : `${base}/api/pickups`) : '/api/pickups';
       console.debug('Posting pickup to', apiUrl);
 
       const res = await fetch(apiUrl, {
