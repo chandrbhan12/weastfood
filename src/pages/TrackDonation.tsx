@@ -45,7 +45,7 @@ const TrackDonation = () => {
 
       try {
         const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api';
-        const res = await fetch(`${apiBase}/pickups/me`, {
+        const res = await fetch(`${apiBase}/api/pickups/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
