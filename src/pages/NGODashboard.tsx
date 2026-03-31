@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import ListingCard from "@/components/ListingCard";
 import DeliveryProgress from "@/components/DeliveryProgress";
 
+const apiBaseUrl = process.env.VITE_API_URL || "http://localhost:3000";
+
 const NGODashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({
@@ -32,21 +34,21 @@ const NGODashboard = () => {
       const headers = { 'Authorization': `Bearer ${token}` };
 
       // Fetch Stats
-      const statsRes = await fetch('/api/pickups/stats', { headers });
+      const statsRes = await fetch(`${apiBaseUrl}/api/pickups/stats`, { headers });
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
       }
 
       // Fetch All Requests (for nearby)
-      const allRes = await fetch('/api/pickups', { headers });
+      const allRes = await fetch(`${apiBaseUrl}/api/pickups`, { headers });
       if (allRes.ok) {
         const allData = await allRes.json();
         setNearbyRequests(allData.filter((r: any) => r.status === 'requested'));
       }
 
       // Fetch My Requests (for active)
-      const myRes = await fetch('/api/pickups/me', { headers });
+      const myRes = await fetch(`${apiBaseUrl}/api/pickups/me`, { headers });
       if (myRes.ok) {
         const myData = await myRes.json();
         setActivePickups(myData.asPartner?.filter((r: any) => ['accepted', 'in_transit'].includes(r.status)) || []);
@@ -65,7 +67,7 @@ const NGODashboard = () => {
       const token = saved ? JSON.parse(saved).token : null;
       if (!token) return toast.error('Please login to claim food');
 
-      const res = await fetch(`/api/pickups/${item._id}/accept`, {
+      const res = await fetch(`${apiBaseUrl}/api/pickups/${item._id}/accept`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -105,7 +107,7 @@ const NGODashboard = () => {
           
           for (const pickup of inTransit) {
             try {
-              await fetch(`/api/pickups/${pickup._id}/location`, {
+              await fetch(`${apiBaseUrl}/api/pickups/${pickup._id}/location`, {
                 method: 'POST',
                 headers: { 
                   'Authorization': `Bearer ${token}`,
@@ -133,7 +135,7 @@ const NGODashboard = () => {
       const saved = localStorage.getItem('auth_session');
       const token = saved ? JSON.parse(saved).token : null;
       
-      const res = await fetch(`/api/pickups/${id}/status`, {
+      const res = await fetch(`${apiBaseUrl}/api/pickups/${id}/status`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
