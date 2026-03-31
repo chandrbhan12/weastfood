@@ -26,10 +26,10 @@ const Navbar = () => {
   const links = [
     { to: "/", label: "Home" },
     ...(user?.role === 'volunteer' || user?.role === 'ngo' ? [{ to: "/dashboard", label: "Dashboard" }] : []),
-    { to: "/browse", label: "Browse Food" },
+    { to: "/waste", label: "waste Food" },
     ...(user?.role !== 'volunteer' && user?.role !== 'ngo' ? [{ to: "/add-food", label: "Donate Food" }] : []),
     { to: "/track", label: "Track Delivery" },
-    { to: "/#top-donors", label: "Top Donors" },
+    { to: "/top-donors", label: "Top Donors" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
