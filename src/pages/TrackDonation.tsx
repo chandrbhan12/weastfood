@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DeliveryProgress from "@/components/DeliveryProgress";
 
+const apiBaseUrl = process.env.VITE_API_URL || "http://localhost:3000";
+
 const demoTracking = {
   id: "FD-20260301-4821",
   food: "Biryani & Curry (20 servings)",
@@ -44,8 +46,7 @@ const TrackDonation = () => {
       if (!token) return;
 
       try {
-        const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api';
-        const res = await fetch(`${apiBase}/api/pickups/me`, {
+        const res = await fetch(`${apiBaseUrl}/api/pickups/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
