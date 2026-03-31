@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { UtensilsCrossed } from "lucide-react";
 
+const apiBaseUrl = process.env.VITE_API_URL || "http://localhost:3000";
+
 const AddFood = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
@@ -44,15 +46,7 @@ const AddFood = () => {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      // Build API URL robustly. If VITE_API_URL is provided it can be a full origin
-      // Default to local backend on port 5000 when VITE_API_URL is not set
-      const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const base = rawBase.replace(/\/$/, '');
-      // If base already contains '/api' assume it's the API base, otherwise append '/api'
-      const apiUrl = base ? (base.includes('/api') ? `${base}/api/pickups` : `${base}/api/pickups`) : '/api/pickups';
-      console.debug('Posting pickup to', apiUrl);
-
-      const res = await fetch(apiUrl, {
+      const res = await fetch(`${apiBaseUrl}/api/pickups`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
