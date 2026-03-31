@@ -12,6 +12,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ListingCard from "@/components/ListingCard";
 
+const apiBaseUrl = process.env.VITE_API_URL || "http://localhost:3000";
+
 const Profile = () => {
   const { user, signOut } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
@@ -33,20 +35,20 @@ const Profile = () => {
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const res = await fetch('/api/pickups/me', { headers });
+        const res = await fetch(`${apiBaseUrl}/api/pickups/me`, { headers });
         if (res.ok) {
           const json = await res.json();
           setRequests([...(json.asDonor || []), ...(json.asPartner || [])]);
         }
 
-        const hres = await fetch('/api/pickups/history', { headers });
+        const hres = await fetch(`${apiBaseUrl}/api/pickups/history`, { headers });
         if (hres.ok) {
           const hj = await hres.json();
           setHistory(hj || []);
         }
 
         // Fetch latest user points
-        const ures = await fetch('/api/auth/me', { headers });
+        const ures = await fetch(`${apiBaseUrl}/api/auth/me`, { headers });
         if (ures.ok) {
           const ud = await ures.json();
           setLatestPoints(ud.points || ud.user?.points || 0);
@@ -98,7 +100,7 @@ const Profile = () => {
     try {
       const saved = localStorage.getItem('auth_session');
       const token = saved ? JSON.parse(saved).token : null;
-      const res = await fetch('/api/pickups', {
+      const res = await fetch(`${apiBaseUrl}/api/pickups`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -119,7 +121,7 @@ const Profile = () => {
     try {
       const saved = localStorage.getItem('auth_session');
       const token = saved ? JSON.parse(saved).token : null;
-      const res = await fetch(`/api/pickups/${id}/accept`, { 
+      const res = await fetch(`${apiBaseUrl}/api/pickups/${id}/accept`, { 
         method: 'POST', 
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -132,7 +134,7 @@ const Profile = () => {
     try {
       const saved = localStorage.getItem('auth_session');
       const token = saved ? JSON.parse(saved).token : null;
-      const res = await fetch(`/api/pickups/${id}/reject`, { 
+      const res = await fetch(`${apiBaseUrl}/api/pickups/${id}/reject`, { 
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -146,7 +148,7 @@ const Profile = () => {
       const saved = localStorage.getItem('auth_session');
       const token = saved ? JSON.parse(saved).token : null;
       if (!token) return toast.error('You must be logged in to update status.');
-      const res = await fetch(`/api/pickups/${id}/status`, {
+      const res = await fetch(`${apiBaseUrl}/api/pickups/${id}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ status: 'completed' }),
@@ -168,7 +170,7 @@ const Profile = () => {
       const token = saved ? JSON.parse(saved).token : null;
       if (!token) return toast.error('Please login.');
       
-      const res = await fetch(`/api/pickups/${id}`, {
+      const res = await fetch(`${apiBaseUrl}/api/pickups/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
