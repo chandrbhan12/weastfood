@@ -15,6 +15,8 @@ import ListingCard from "@/components/ListingCard";
 
 const categories = ["All", "Cooked Meals", "Bakery", "Snacks", "Fresh Produce"];
 
+const apiBaseUrl = process.env.VITE_API_URL || "http://localhost:3000";
+
 const Browse = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -34,12 +36,11 @@ const Browse = () => {
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
         setFetchStatus('loading');
-        const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
-        let res = await fetch(apiBase + '/api/pickups', { headers });
+        let res = await fetch(apiBaseUrl + '/api/pickups', { headers });
         if (!res.ok) {
           // try public endpoint if primary fails for any reason
           console.warn('Primary /pickups failed, status:', res.status);
-          res = await fetch(apiBase + '/api/pickups/public');
+          res = await fetch(apiBaseUrl + '/api/pickups/public');
           console.warn('Tried /pickups/public, status:', res.status);
         }
         if (!res.ok) {
@@ -79,8 +80,7 @@ const Browse = () => {
         const token = saved ? JSON.parse(saved).token : null;
         if (!token) return setMyDonations([]);
         const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` };
-        const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
-        const res = await fetch(apiBase + '/api/pickups/me', { headers });
+        const res = await fetch(apiBaseUrl + '/api/pickups/me', { headers });
         if (!res.ok) return;
         const json = await res.json();
         if (!mounted) return;
@@ -102,7 +102,7 @@ const Browse = () => {
       const token = saved ? JSON.parse(saved).token : null;
       if (!token) return toast.error('Please login to claim food');
 
-      const res = await fetch(`/api/pickups/${item._id}/accept`, {
+      const res = await fetch(`${apiBaseUrl}/api/pickups/${item._id}/accept`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -114,8 +114,7 @@ const Browse = () => {
       
       toast.success(`Food claimed successfully!`);
       // Refresh listings
-      const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
-      const updatedRes = await fetch(apiBase + '/api/pickups', { 
+      const updatedRes = await fetch(apiBaseUrl + '/api/pickups', { 
         headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
       });
       if (updatedRes.ok) {
@@ -134,7 +133,7 @@ const Browse = () => {
       const token = saved ? JSON.parse(saved).token : null;
       if (!token) return toast.error('Please login to continue');
 
-      const res = await fetch(`/api/pickups/${item._id}/reject`, {
+      const res = await fetch(`${apiBaseUrl}/api/pickups/${item._id}/reject`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -146,8 +145,7 @@ const Browse = () => {
       
       toast.info(`Listing rejected`);
       // Refresh listings
-      const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '') + '/api';
-      const updatedRes = await fetch(apiBase + '/api/pickups', { 
+      const updatedRes = await fetch(apiBaseUrl + '/api/pickups', { 
         headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
       });
       if (updatedRes.ok) {
@@ -165,8 +163,7 @@ const Browse = () => {
       const saved = localStorage.getItem('auth_session');
       const token = saved ? JSON.parse(saved).token : null;
       if (!token) return toast.error('You must be logged in to update status.');
-      const base = import.meta.env.VITE_API_URL || '/api';
-      const res = await fetch(base + `/api/pickups/${id}/status`, {
+      const res = await fetch(apiBaseUrl + `/api/pickups/${id}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ status: 'completed' }),
