@@ -68,7 +68,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       // Remove hardcoded localhost for production support
-      const baseUrl = import.meta.env.VITE_API_URL || ''; 
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      // TEMP: log VITE_API_URL to verify env is loaded in the browser
+      console.log(import.meta.env.VITE_API_URL);
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -106,6 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (email: string, password: string, full_name: string, phone: string, role: string) => {
     try {
       const baseUrl = import.meta.env.VITE_API_URL || '';
+      // TEMP: log VITE_API_URL to verify env is loaded in the browser
+      console.log(import.meta.env.VITE_API_URL);
       const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
