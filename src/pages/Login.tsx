@@ -78,7 +78,7 @@ const Login = () => {
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
-                  <Button type="submit" className="w-full gap-2 glow-primary h-11" disabled={loading}>
+                  <Button type="button" onClick={handleLogin} className="w-full gap-2 glow-primary h-11" disabled={loading}>
                     <LogIn className="h-4 w-4" />
                     {loading ? "Logging in..." : "Log In"}
                   </Button>
